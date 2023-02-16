@@ -8,22 +8,6 @@ export function MakeKeyboard(){
           { text: 'Нет', // текст на кнопке
     callback_data: 'no' }
         ],
-        [
-            {
-              text: 'Горы',
-              callback_data: 'Горы'
-            },
-            {
-                text: 'Отель',
-                callback_data: 'Отель'
-              }
-        ],
-        [
-            {
-              text: 'EARTH',
-              callback_data: 'Earth' 
-            }
-          ]
       ];
     return keyboard
 }
