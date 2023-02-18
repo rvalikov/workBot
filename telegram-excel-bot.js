@@ -1,6 +1,7 @@
 import ExcelJS from "exceljs"
 
-export function readExcel(employee) {
+export async function readExcel(employee) {
+  console.log ("employee", employee)
   const workbook = new ExcelJS.Workbook();
   let flag = false;
 
@@ -18,10 +19,9 @@ export function readExcel(employee) {
 
       worksheet.eachRow((row, rowNumber) => {
         const rowValues = row.values;
-console.log("Проверка")
-        if (rowValues[1].toUpperCase() == employee.firstName &&
-            rowValues[2].toUpperCase() == employee.lastName &&
-            rowValues[3].toUpperCase() == employee.department &&
+        if (rowValues[1].toUpperCase() == employee.firstName.toUpperCase() &&
+            rowValues[2].toUpperCase() == employee.lastName.toUpperCase() &&
+            rowValues[3].toUpperCase() == employee.department.toUpperCase() &&
             rowValues[4] == employee.phone) {
           flag = true;
         }

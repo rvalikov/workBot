@@ -11,17 +11,17 @@ const keyboard = MakeKeyboard();
 const keyboardAgree = KeyboardAgree();
 let employee = {}
 let count = 1
-
+const adminChatId=590783190
 // Обработчик команды /start
 bot.onText(/\/start/, (msg) => {
   count = 1;
   employee = {};
   console.log("countbegin", count)
   const chatId = msg.chat.id;
-  const chatName = msg.chat.first_name;
   
+  console.log("chattbegin", msg.chat)
 
-  bot.sendMessage(chatId, `Привет ${chatName}!  Познакомимся? `, {
+  bot.sendMessage(chatId, `Привет ${msg.chat.first_name} ${msg.chat.last_name}!  Познакомимся? `, {
     reply_markup: {
       inline_keyboard: keyboard
     }
@@ -37,6 +37,10 @@ bot.on('callback_query', (query) => {
     case 'yes':
       bot.sendMessage(chatId, `Загрузка согласия`);
       fs.readFile('./Согласие по ФЗ-152.pdf', (err, file) => {
+        if (err) {
+          bot.sendMessage(chatId, `Произошла ошибка при чтении файла: ${err.message}`);
+          return;
+        }
         bot.sendDocument(chatId, file, {
           caption: 'Согласие'
         })
@@ -50,11 +54,16 @@ bot.on('callback_query', (query) => {
       });
       break;
 
+      case 'no':
+        bot.sendMessage(chatId, `До встречи! `)
+        bot.removeAllListeners('message');
+        break
+    
     case 'yesAgree':
       bot.sendMessage(chatId, `Согласие подписано. введите имя`);
-      
+      console.log ("count agree", count)
       // Обработчик введенных данных
-      bot.on('message', (msg) => {
+      bot.on('message', async (msg) => {
         if (count == 1) {
           employee.firstName = msg.text;
           count++;
@@ -70,12 +79,31 @@ bot.on('callback_query', (query) => {
         } else if (count == 4) {
           employee.phone = msg.text;
           bot.sendMessage(chatId, `Вы ввели: Имя: ${employee.firstName}, Фамилия: ${employee.lastName}, Отдел: ${employee.department}, Телефон: ${employee.phone}`);
-          
-        }
-      
-    })
+          const flag = await readExcel(employee)
+          console.log ("flag=", flag)
+          if (flag)
+          {
+            bot.sendMessage(chatId, `Вы ввели: Имя: ${employee.firstName}, Фамилия: ${employee.lastName}, Отдел: ${employee.department}, Телефон: ${employee.phone} Такой сотрудник есть в списке. вы приглашаетесь в бот @username_bot.`)
+            bot.sendMessage(adminChatId, `Пользователь ${msg.chat.first_name} ${msg.chat.last_name} id = ${msg.chat.id} нашел сотрудника с такими данными: Имя: ${employee.firstName}, Фамилия: ${employee.lastName}, Отдел: ${employee.department}, Телефон: ${employee.phone}`);
+          // Удаляем все обработчики, кроме команды /start
+            bot.removeAllListeners('message');
+            //bot.removeAllListeners('callback_query');
+          }
+          else {
+            bot.sendMessage(chatId, `Вы ввели: Имя: ${employee.firstName}, Фамилия: ${employee.lastName}, Отдел: ${employee.department}, Телефон: ${employee.phone} Такого сотрудника нет в списке. Для продолжения работы введите /start`)
+            bot.sendMessage(adminChatId, `Пользователь ${msg.chat.first_name} ${msg.chat.last_name} не нашел сотрудника с такими данными: Имя: ${employee.firstName}, Фамилия: ${employee.lastName}, Отдел: ${employee.department}, Телефон: ${employee.phone}`);
+              // Удаляем все обработчики, кроме команды /start
+            bot.removeAllListeners('message');
+            //bot.removeAllListeners('callback_query');
+          };
 
-break;
+          }
+
+        })
+        
+    
+
+    break;
   
                    
                  
@@ -84,7 +112,7 @@ break;
                    
      
              case "noAgree":{
-                bot.sendMessage(chatId, `К сожалению, без подписания Согласия мы не можем взаимодействовать`)
+                bot.sendMessage(chatId, `К сожалению, без подписания Согласия мы не можем взаимодействовать. Для продолжения работы введите /start`)
                    break     
              }
   }
