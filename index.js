@@ -78,7 +78,13 @@ bot.on('callback_query', (query) => {
           bot.sendMessage(chatId, 'Введите телефон сотрудника:');
         } else if (count == 4) {
           employee.phone = msg.text;
-          bot.sendMessage(chatId, `Вы ввели: Имя: ${employee.firstName}, Фамилия: ${employee.lastName}, Отдел: ${employee.department}, Телефон: ${employee.phone}`);
+          while (employee.phone.length < 10) { // цикл, который будет продолжаться, пока номер телефона не будет достаточной длины
+            bot.sendMessage(chatId, 'Вы ввели слишком короткий номер. Повторите ввод');
+            const response = await new Promise(resolve => bot.once('message', resolve)); // ждем ответа от пользователя и сохраняем его в переменную response
+            if(response.text.length>9){
+            employee.phone = response.text;} // сохраняем ответ пользователя в поле phone объекта employee
+          }
+          
           const flag = await readExcel(employee)
           console.log ("flag=", flag)
           if (flag)
