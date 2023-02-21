@@ -22,7 +22,7 @@ export async function readExcel(employee) {
         if (rowValues[1].toUpperCase() == employee.firstName.toUpperCase() &&
             rowValues[2].toUpperCase() == employee.lastName.toUpperCase() &&
             rowValues[3].toUpperCase() == employee.department.toUpperCase() &&
-            rowValues[4] == employee.phone) {
+            rowValues[4].slice(-10) == employee.phone.slice(-10)) {
           flag = true;
         }
       });
