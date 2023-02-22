@@ -1,20 +1,22 @@
 import express from 'express';
 import TelegramBot from 'node-telegram-bot-api';
-import fs from 'fs';
+import fs, { read } from 'fs';
 import { readExcel } from './telegram-excel-bot.js';
 import { PORT, TOKEN } from './config.js';
-import { KeyboardAgree, MakeKeyboard } from './keyboard.js';
+import { KeyboardAgree, lengthKeyboard, MakeKeyboard } from './keyboard.js';
 
 const bot = new TelegramBot(TOKEN, { polling: true });
 const app = express();
 const keyboard = MakeKeyboard();
 const keyboardAgree = KeyboardAgree();
+const lengthkeyboard=lengthKeyboard()
 let employee = {}
 let count = 1
 const adminChatId=590783190
 // Обработчик команды /start
 bot.onText(/\/start/, (msg) => {
   count = 1;
+  console.log("employee.begin")
   employee = {};
   console.log("countbegin", count)
   const chatId = msg.chat.id;
@@ -63,16 +65,72 @@ bot.on('callback_query', (query) => {
       bot.sendMessage(chatId, `Согласие подписано. введите имя`);
       console.log ("count agree", count)
       // Обработчик введенных данных
-      bot.on('message', async (msg) => {
+      bot.on('message', async (msg) => { 
+        console.log("Первый коунт", count)
         if (count == 1) {
+          if(msg.text.length>2){
           employee.firstName = msg.text;
           count++;
           bot.sendMessage(chatId, 'Введите фамилию сотрудника:');
-        } else if (count == 2) {
-          employee.lastName = msg.text;
-          count++;
-          bot.sendMessage(chatId, 'Введите отдел сотрудника:');
-        } else if (count == 3) {
+        console.log("countNAme=", count)}
+          else{
+            bot.sendMessage(chatId, `Ваше имя ${msg.text}?`, {
+              reply_markup: {
+                inline_keyboard: lengthkeyboard
+              }
+            })
+            bot.on('callback_query', function read (query){
+              
+            console.log("data= ", query.data)
+            if (query.data == 'lengthyes'){
+              console.log("зашел в lengthyes")
+              employee.firstName = msg.text;
+              count++;
+              bot.sendMessage(chatId, 'Введите фамилию сотрудника:');
+              console.log("countyesName", count)
+            }
+            else{
+            bot.sendMessage(chatId, 'Введите имя сотрудника:')
+              count=1
+            }
+            bot.removeListener("callback_query", read)
+            })
+            
+          }
+        }
+            
+
+         else if (count == 2) {
+          if(msg.text.length>2){
+            employee.lastName = msg.text;
+            count++;
+            console.log("countLastName=", count)
+
+            bot.sendMessage(chatId, 'Введите отдел сотрудника:');}
+            else{
+              bot.sendMessage(chatId, `Ваша фамилия ${msg.text}?`, {
+                reply_markup: {
+                  inline_keyboard: lengthkeyboard
+                }
+              })
+              bot.on('callback_query',function readLast (query){
+                
+              console.log(query.data)
+              if (query.data == 'lengthyes'){
+                console.log("зашел в lengthyes")
+                employee.lastName = msg.text;
+                count++;
+                bot.sendMessage(chatId, 'Введите отдел сотрудника::');
+              }
+              else
+              {bot.sendMessage(chatId, 'Введите фамилию сотрудника:')
+                count=2}
+                bot.removeListener("callback_query", readLast)})
+            }
+            
+          }
+          
+         else if (count == 3) {
           employee.department = msg.text;
           count++;
           bot.sendMessage(chatId, 'Введите телефон сотрудника:');
@@ -80,7 +138,11 @@ bot.on('callback_query', (query) => {
           employee.phone = msg.text;
           while (employee.phone.length < 10) { // цикл, который будет продолжаться, пока номер телефона не будет достаточной длины
             bot.sendMessage(chatId, 'Вы ввели слишком короткий номер. Повторите ввод');
-            const response = await new Promise(resolve => bot.once('message', resolve)); // ждем ответа от пользователя и сохраняем его в переменную response
+            const response = await new Promise(resolve => {
+              bot.on('message', resolve) // ждем ответа от пользователя и сохраняем его в переменную response
+              
+            }); 
+            bot.removeAllListeners('message');
             if(response.text.length>9){
             employee.phone = response.text;} // сохраняем ответ пользователя в поле phone объекта employee
           }
@@ -110,7 +172,12 @@ bot.on('callback_query', (query) => {
     
 
     break;
+  
+                   
                  
+                  
+                
+                   
      
              case "noAgree":{
                 bot.sendMessage(chatId, `К сожалению, без подписания Согласия мы не можем взаимодействовать. Для продолжения работы введите /start`)

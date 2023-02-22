@@ -24,3 +24,17 @@ export function KeyboardAgree(){
   ]
   return keyboardAgree
     }
+
+    export function lengthKeyboard(){
+      const lengthkeyboard = [
+          [
+            {
+              text: 'Да', // текст на кнопке
+              callback_data: 'lengthyes' // данные для обработчика событий
+            },
+            { text: 'Нет', // текст на кнопке
+      callback_data: 'lengthno' }
+          ],
+        ];
+      return lengthkeyboard
+    }
