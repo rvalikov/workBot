@@ -68,7 +68,8 @@ bot.on('callback_query', (query) => {
       bot.on('message', async (msg) => { 
         console.log("Первый коунт", count)
         if (count == 1) {
-          if(msg.text.length>2){
+          if (msg.text=="?"){bot.sendMessage(chatId, 'Введите имя сотрудника:')}
+          else if(msg.text.length>2){
           employee.firstName = msg.text;
           count++;
           bot.sendMessage(chatId, 'Введите фамилию сотрудника:');
@@ -101,7 +102,8 @@ bot.on('callback_query', (query) => {
             
 
          else if (count == 2) {
-          if(msg.text.length>2){
+          if (msg.text=="?"){bot.sendMessage(chatId, 'Введите фамилию сотрудника:')}
+          else if(msg.text.length>2){
             employee.lastName = msg.text;
             count++;
             console.log("countLastName=", count)
@@ -126,16 +128,22 @@ bot.on('callback_query', (query) => {
               {bot.sendMessage(chatId, 'Введите фамилию сотрудника:')
                 count=2}
                 bot.removeListener("callback_query", readLast)})
-            }
+                
+              }
             
           }
           
          else if (count == 3) {
+          if (msg.text=="?"){
+            bot.sendMessage(chatId, 'Введите отдел сотрудника:')
+           count=3}
+          else {
           employee.department = msg.text;
           count++;
-          bot.sendMessage(chatId, 'Введите телефон сотрудника:');
+          bot.sendMessage(chatId, 'Введите телефон сотрудника:');}
         } else if (count == 4) {
-          employee.phone = msg.text;
+          if (msg.text=="?"){bot.sendMessage(chatId, 'Введите телефон сотрудника:')}
+          else employee.phone = msg.text;
           while (employee.phone.length < 10) { // цикл, который будет продолжаться, пока номер телефона не будет достаточной длины
             bot.sendMessage(chatId, 'Вы ввели слишком короткий номер. Повторите ввод');
             const response = await new Promise(resolve => {
