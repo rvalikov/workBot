@@ -110,12 +110,7 @@ bot.on('callback_query', (query) => {
     
 
     break;
-  
-                   
                  
-                  
-                
-                   
      
              case "noAgree":{
                 bot.sendMessage(chatId, `К сожалению, без подписания Согласия мы не можем взаимодействовать. Для продолжения работы введите /start`)
