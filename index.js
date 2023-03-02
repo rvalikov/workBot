@@ -4,7 +4,7 @@ import fs, { read } from 'fs';
 import { readExcel } from './telegram-excel-bot.js';
 import { PORT, TOKEN } from './config.js';
 import { KeyboardAgree, lengthKeyboard, MakeKeyboard } from './keyboard.js';
-
+let employeefio=[]
 const bot = new TelegramBot(TOKEN, { polling: true });
 const app = express();
 const keyboard = MakeKeyboard();
@@ -13,6 +13,7 @@ const lengthkeyboard=lengthKeyboard()
 let employee = {}
 let count = 1
 const adminChatId=590783190
+const adminChatIdSecond=6079519462
 // Обработчик команды /start
 bot.onText(/\/start/, (msg) => {
   count = 1;
@@ -63,14 +64,14 @@ bot.on('callback_query', (query) => {
     
     case 'yesAgree':
       bot.sendMessage(chatId, `Согласие подписано. введите имя`);
-      console.log ("count agree", count)
+      
       // Обработчик введенных данных
       bot.on('message', async (msg) => { 
         console.log("Первый коунт", count)
         if (count == 1) {
           if (msg.text=="?"){bot.sendMessage(chatId, 'Введите имя сотрудника:')}
           else if(msg.text.length>2){
-          employee.firstName = msg.text;
+          employee.firstName = msg.text.toUpperCase();
           count++;
           bot.sendMessage(chatId, 'Введите фамилию сотрудника:');
         console.log("countNAme=", count)}
@@ -85,7 +86,7 @@ bot.on('callback_query', (query) => {
             console.log("data= ", query.data)
             if (query.data == 'lengthyes'){
               console.log("зашел в lengthyes")
-              employee.firstName = msg.text;
+              employee.firstName = msg.text.toUpperCase();
               count++;
               bot.sendMessage(chatId, 'Введите фамилию сотрудника:');
               console.log("countyesName", count)
@@ -104,7 +105,7 @@ bot.on('callback_query', (query) => {
          else if (count == 2) {
           if (msg.text=="?"){bot.sendMessage(chatId, 'Введите фамилию сотрудника:')}
           else if(msg.text.length>2){
-            employee.lastName = msg.text;
+            employee.lastName = msg.text.toUpperCase();
             count++;
             console.log("countLastName=", count)
 
@@ -138,12 +139,12 @@ bot.on('callback_query', (query) => {
             bot.sendMessage(chatId, 'Введите отдел сотрудника:')
            count=3}
           else {
-          employee.department = msg.text;
+          employee.department = msg.text.toUpperCase();
           count++;
           bot.sendMessage(chatId, 'Введите телефон сотрудника:');}
         } else if (count == 4) {
           if (msg.text=="?"){bot.sendMessage(chatId, 'Введите телефон сотрудника:')}
-          else employee.phone = msg.text;
+          else employee.phone = msg.text.slice(-10);
           while (employee.phone.length < 10) { // цикл, который будет продолжаться, пока номер телефона не будет достаточной длины
             bot.sendMessage(chatId, 'Вы ввели слишком короткий номер. Повторите ввод');
             const response = await new Promise(resolve => {
@@ -152,14 +153,18 @@ bot.on('callback_query', (query) => {
             }); 
             bot.removeAllListeners('message');
             if(response.text.length>9){
-            employee.phone = response.text;} // сохраняем ответ пользователя в поле phone объекта employee
+            employee.phone = response.text;
+            employee.phone=employee.phone.slice(-10)} // сохраняем ответ пользователя в поле phone объекта employee
+            console.log("employerphone = ", employee.phone)
           }
-          
+          employeefio=employeefio.concat(employee.firstName,employee.lastName)
+          console.log("employeeFIO", employeefio)
           const flag = await readExcel(employee)
           console.log ("flag=", flag)
           if (flag)
-          {
+          { 
             bot.sendMessage(chatId, `Вы ввели: Имя: ${employee.firstName}, Фамилия: ${employee.lastName}, Отдел: ${employee.department}, Телефон: ${employee.phone} Такой сотрудник есть в списке. вы приглашаетесь в бот @username_bot.`)
+            bot.sendMessage(adminChatIdSecond, `Пользователь ${msg.chat.first_name} ${msg.chat.last_name} id = ${msg.chat.id} нашел сотрудника с такими данными: Имя: ${employee.firstName}, Фамилия: ${employee.lastName}, Отдел: ${employee.department}, Телефон: ${employee.phone}`);
             bot.sendMessage(adminChatId, `Пользователь ${msg.chat.first_name} ${msg.chat.last_name} id = ${msg.chat.id} нашел сотрудника с такими данными: Имя: ${employee.firstName}, Фамилия: ${employee.lastName}, Отдел: ${employee.department}, Телефон: ${employee.phone}`);
           // Удаляем все обработчики, кроме команды /start
             bot.removeAllListeners('message');
@@ -167,6 +172,7 @@ bot.on('callback_query', (query) => {
           }
           else {
             bot.sendMessage(chatId, `Вы ввели: Имя: ${employee.firstName}, Фамилия: ${employee.lastName}, Отдел: ${employee.department}, Телефон: ${employee.phone} Такого сотрудника нет в списке. Для продолжения работы введите /start`)
+            bot.sendMessage(adminChatIdSecond, `Пользователь ${msg.chat.first_name} ${msg.chat.last_name} не нашел сотрудника с такими данными: Имя: ${employee.firstName}, Фамилия: ${employee.lastName}, Отдел: ${employee.department}, Телефон: ${employee.phone}`);
             bot.sendMessage(adminChatId, `Пользователь ${msg.chat.first_name} ${msg.chat.last_name} не нашел сотрудника с такими данными: Имя: ${employee.firstName}, Фамилия: ${employee.lastName}, Отдел: ${employee.department}, Телефон: ${employee.phone}`);
               // Удаляем все обработчики, кроме команды /start
             bot.removeAllListeners('message');
